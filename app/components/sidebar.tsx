@@ -4,19 +4,19 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, MapPin, ChevronRight } from "lucide-react";
+import { Search, X, MapPin, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Define pin category colors to match the main component
+// Define pin category colors to match RDR2 map style
 const PIN_CATEGORIES_COLORS: { [key: string]: string } = {
-  default: "text-blue-500",
-  important: "text-rose-500",
-  location: "text-emerald-500",
+  default: "text-yellow-600",
+  important: "text-red-600",
+  location: "text-green-600",
   favorite: "text-amber-500",
-  landmark: "text-slate-500",
-  camp: "text-orange-500",
-  mission: "text-violet-500",
-  settlement: "text-indigo-500",
+  landmark: "text-stone-500",
+  camp: "text-orange-600",
+  mission: "text-purple-600",
+  settlement: "text-blue-600",
 };
 
 interface Pin {
@@ -29,15 +29,14 @@ interface Pin {
 }
 
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
   onSelectPin: (pin: Pin) => void;
 }
 
-export function Sidebar({ isOpen, onClose, onSelectPin }: SidebarProps) {
+export function Sidebar({ onSelectPin }: SidebarProps) {
   const [pins, setPins] = useState<Pin[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isClient, setIsClient] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -67,68 +66,86 @@ export function Sidebar({ isOpen, onClose, onSelectPin }: SidebarProps) {
   );
 
   return (
-    <div
-      className={cn(
-        "w-80 bg-neutral-800 border-r border-neutral-700 h-full overflow-hidden transition-all duration-300 ease-in-out absolute md:relative z-10",
-        isOpen ? "left-0" : "-left-80 md:left-0"
-      )}
-    >
-      <div className="flex flex-col h-full p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">
+    <>
+      {/* Mobile Sidebar Toggle Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="md:hidden fixed top-4 left-4 z-20 bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+        {isSidebarOpen ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <Menu className="h-5 w-5" />
+        )}
+        <span className="sr-only">Toggle Sidebar</span>
+      </Button>
+
+      <div
+        className={cn(
+          "w-80 bg-neutral-900 border-r border-neutral-700 h-full overflow-hidden transition-all duration-300 ease-in-out fixed md:relative z-10",
+          isSidebarOpen ? "left-0" : "-left-80 md:left-0",
+          "flex flex-col shadow-2xl"
+        )}
+      >
+        <div className="bg-neutral-800 p-4 border-b border-neutral-700 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-neutral-300 uppercase tracking-wider">
             Pins ({pins.length})
           </h2>
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-white"
-            onClick={onClose}
+            className="text-neutral-400 hover:text-neutral-200"
+            onClick={() => setIsSidebarOpen(false)}
           >
-            <ChevronRight className="h-5 w-5" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-400" />
-          <Input
-            placeholder="Search pins..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-8 bg-neutral-900 border-neutral-700 text-white"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3 text-neutral-400"
-              onClick={() => setSearchQuery("")}
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Clear search</span>
-            </Button>
-          )}
+        <div className="p-4 border-b border-neutral-700">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-400" />
+            <Input
+              placeholder="Search pins..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-8 bg-neutral-800 border-neutral-700 text-neutral-300 focus:ring-2 focus:ring-amber-600"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 text-neutral-400 hover:text-neutral-200"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Clear search</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {sortedPins.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-neutral-400 p-4">
+          <div className="flex flex-col items-center justify-center flex-1 text-center text-neutral-400 p-4">
             {searchQuery ? (
               <>
-                <Search className="h-8 w-8 mb-2" />
+                <Search className="h-8 w-8 mb-2 text-neutral-500" />
                 <p>No pins match your search</p>
               </>
             ) : (
               <>
-                <MapPin className="h-8 w-8 mb-2" />
+                <MapPin className="h-8 w-8 mb-2 text-neutral-500" />
                 <p>No pins added yet</p>
-                <p className="text-sm mt-1">
+                <p className="text-sm mt-1 text-neutral-500">
                   Click "Add Pin" to start marking locations
                 </p>
               </>
             )}
           </div>
         ) : (
-          <ScrollArea className="flex-1 -mx-4 px-4">
-            <div className="space-y-2">
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-2">
               {sortedPins.map((pin) => {
                 // Get the color for the pin's category
                 const categoryColor =
@@ -138,25 +155,25 @@ export function Sidebar({ isOpen, onClose, onSelectPin }: SidebarProps) {
                 return (
                   <div
                     key={pin.id}
-                    className="p-3 rounded-md border border-neutral-700 bg-neutral-900 hover:bg-neutral-700 cursor-pointer group"
+                    className="p-3 rounded-md border border-neutral-700 bg-neutral-800 hover:bg-neutral-700 cursor-pointer group transition-colors duration-200"
                     onClick={() => {
                       onSelectPin(pin);
-                      onClose(); // Close sidebar on mobile
+                      setIsSidebarOpen(false);
                     }}
                   >
                     <div className="flex items-center space-x-2 mb-1">
                       <MapPin
                         className={`h-5 w-5 ${categoryColor} flex-shrink-0`}
                       />
-                      <h3 className="font-medium truncate text-white flex-1">
+                      <h3 className="font-medium truncate text-neutral-300 flex-1 group-hover:text-white">
                         {pin.title}
                       </h3>
-                      <span className="text-xs text-neutral-400 group-hover:text-white">
+                      <span className="text-xs text-neutral-400 group-hover:text-neutral-200">
                         {pin.category}
                       </span>
                     </div>
                     {pin.description && (
-                      <p className="text-sm text-neutral-400 line-clamp-2">
+                      <p className="text-sm text-neutral-400 line-clamp-2 group-hover:text-neutral-300">
                         {pin.description}
                       </p>
                     )}
@@ -170,6 +187,6 @@ export function Sidebar({ isOpen, onClose, onSelectPin }: SidebarProps) {
           </ScrollArea>
         )}
       </div>
-    </div>
+    </>
   );
 }
