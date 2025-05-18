@@ -1,37 +1,46 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { PinMarker } from "./pin-marker"
-import { PinForm } from "./pin-form"
-import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, useRef } from "react";
+import { PinMarker } from "./pin-marker";
+import { PinForm } from "./pin-form";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Pin {
-  id: string
-  position: { x: number; y: number }
-  title: string
-  description: string
-  createdAt: string
+  id: string;
+  position: { x: number; y: number };
+  title: string;
+  description: string;
+  createdAt: string;
 }
 
 interface MapContainerProps {
-  pins: Pin[]
-  onAddPin: (pin: Pin) => void
-  onUpdatePin: (pin: Pin) => void
-  onDeletePin: (id: string) => void
-  isAddingPin: boolean
+  pins: Pin[];
+  onAddPin: (pin: Pin) => void;
+  onUpdatePin: (pin: Pin) => void;
+  onDeletePin: (id: string) => void;
+  isAddingPin: boolean;
 }
 
-export function MapContainer({ pins, onAddPin, onUpdatePin, onDeletePin, isAddingPin }: MapContainerProps) {
-  const mapRef = useRef<HTMLDivElement>(null)
-  const [mapLoaded, setMapLoaded] = useState(false)
-  const [mapSize, setMapSize] = useState({ width: 0, height: 0 })
-  const [newPinPosition, setNewPinPosition] = useState<{ x: number; y: number } | null>(null)
-  const [selectedPin, setSelectedPin] = useState<Pin | null>(null)
-  const [mapError, setMapError] = useState<string | null>(null)
+export function MapContainer({
+  pins,
+  onAddPin,
+  onUpdatePin,
+  onDeletePin,
+  isAddingPin,
+}: MapContainerProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapSize, setMapSize] = useState({ width: 0, height: 0 });
+  const [newPinPosition, setNewPinPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Set map dimensions on load and resize
   useEffect(() => {
@@ -40,30 +49,55 @@ export function MapContainer({ pins, onAddPin, onUpdatePin, onDeletePin, isAddin
         setMapSize({
           width: mapRef.current.clientWidth,
           height: mapRef.current.clientHeight,
-        })
+        });
       }
-    }
+    };
 
-    updateMapSize()
-    window.addEventListener("resize", updateMapSize)
+    updateMapSize();
+    window.addEventListener("resize", updateMapSize);
 
     return () => {
-      window.removeEventListener("resize", updateMapSize)
+      window.removeEventListener("resize", updateMapSize);
+    };
+  }, []);
+
+  const handleMapClick = (e) => {
+    if (isDragging || !containerRef.current || !imageRef.current) return;
+
+    const imageRect = imageRef.current.getBoundingClientRect();
+
+    // Calculate click position relative to the image
+    const x = ((e.clientX - imageRect.left) / imageRect.width) * 100;
+    const y = ((e.clientY - imageRect.top) / imageRect.height) * 100;
+
+    if (isAddingPin) {
+      // Handle normal pin adding
+      setNewPinPosition({ x, y });
+    } else if (isUpdatingPinLocation) {
+      // Update the pin's location
+      const pinToUpdate =
+        selectedPin && pins.find((pin) => pin.id === selectedPin.id);
+
+      if (pinToUpdate) {
+        // Update the pin with the new position
+        setPins(
+          pins.map((pin) =>
+            pin.id === selectedPin.id ? { ...pin, position: { x, y } } : pin
+          )
+        );
+
+        // Reset the updating state
+        setIsUpdatingPinLocation(false);
+
+        // Reselect the pin to show the edit form
+        const updatedPin = { ...pinToUpdate, position: { x, y } };
+        setSelectedPin(updatedPin);
+      }
     }
-  }, [])
-
-  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isAddingPin || !mapRef.current) return
-
-    const rect = mapRef.current.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-
-    setNewPinPosition({ x, y })
-  }
+  };
 
   const handlePinSubmit = (title: string, description: string) => {
-    if (!newPinPosition) return
+    if (!newPinPosition) return;
 
     const newPin: Pin = {
       id: Date.now().toString(),
@@ -71,40 +105,43 @@ export function MapContainer({ pins, onAddPin, onUpdatePin, onDeletePin, isAddin
       title,
       description,
       createdAt: new Date().toISOString(),
-    }
+    };
 
-    onAddPin(newPin)
-    setNewPinPosition(null)
-  }
+    onAddPin(newPin);
+    setNewPinPosition(null);
+  };
 
   const handlePinUpdate = (pin: Pin) => {
-    onUpdatePin(pin)
-    setSelectedPin(null)
-  }
+    onUpdatePin(pin);
+    setSelectedPin(null);
+  };
 
   const handlePinDelete = (id: string) => {
-    onDeletePin(id)
-    setSelectedPin(null)
-  }
+    onDeletePin(id);
+    setSelectedPin(null);
+  };
 
   const handlePinCancel = () => {
-    setNewPinPosition(null)
-    setSelectedPin(null)
-  }
+    setNewPinPosition(null);
+    setSelectedPin(null);
+  };
 
   const handleImageLoad = () => {
-    setMapLoaded(true)
-  }
+    setMapLoaded(true);
+  };
 
   const handleImageError = () => {
-    setMapError("Failed to load map image. Please check the image path.")
-    console.error("Failed to load map image at /images/rdr2-map.png")
-  }
+    setMapError("Failed to load map image. Please check the image path.");
+    console.error("Failed to load map image at /images/rdr2-map.png");
+  };
 
   return (
     <div
       ref={mapRef}
-      className={cn("w-full h-full relative bg-gray-200 cursor-default", isAddingPin && "cursor-crosshair")}
+      className={cn(
+        "w-full h-full relative bg-gray-200 cursor-default",
+        isAddingPin && "cursor-crosshair"
+      )}
       onClick={handleMapClick}
       style={{ minHeight: "500px" }} // Ensure minimum height
     >
@@ -154,16 +191,23 @@ export function MapContainer({ pins, onAddPin, onUpdatePin, onDeletePin, isAddin
                 }}
               />
               <div className="absolute bottom-4 left-4 right-4 md:left-1/4 md:right-1/4 bg-background p-4 rounded-lg shadow-lg border">
-                <PinForm onSubmit={handlePinSubmit} onCancel={handlePinCancel} title="" description="" />
+                <PinForm
+                  onSubmit={handlePinSubmit}
+                  onCancel={handlePinCancel}
+                  title=""
+                  description=""
+                />
               </div>
             </>
           )}
 
           {/* Form for editing an existing pin */}
-          {selectedPin && !newPinPosition && (
-            <div className="absolute bottom-4 left-4 right-4 md:left-1/4 md:right-1/4 bg-background p-4 rounded-lg shadow-lg border">
+          {selectedPin && !isAddingPin && !isUpdatingPinLocation && (
+            <div className="absolute inset-x-4 bottom-4 md:w-2/3 md:left-1/6 lg:w-1/2 lg:left-1/4 bg-black bg-opacity-90 p-4 rounded-lg shadow-lg border border-neutral-700">
               <PinForm
-                onSubmit={(title, description) => handlePinUpdate({ ...selectedPin, title, description })}
+                onSubmit={(title, description) =>
+                  handlePinUpdate({ title, description })
+                }
                 onCancel={handlePinCancel}
                 onDelete={() => handlePinDelete(selectedPin.id)}
                 title={selectedPin.title}
@@ -182,5 +226,5 @@ export function MapContainer({ pins, onAddPin, onUpdatePin, onDeletePin, isAddin
         </>
       )}
     </div>
-  )
+  );
 }

@@ -67,11 +67,11 @@ export function Sidebar({ onSelectPin }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Sidebar Toggle Button */}
+      {/* Sidebar Toggle Button - Visible on all screen sizes */}
       <Button
         variant="outline"
         size="icon"
-        className="md:hidden fixed top-4 left-4 z-20 bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+        className="fixed top-4 left-4 z-20 bg-neutral-900 border-neutral-700 text-neutral-300 hover:bg-neutral-800"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
         {isSidebarOpen ? (
@@ -82,10 +82,19 @@ export function Sidebar({ onSelectPin }: SidebarProps) {
         <span className="sr-only">Toggle Sidebar</span>
       </Button>
 
+      {/* Overlay to close sidebar when clicking outside */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-10"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Fixed-position sidebar that doesn't cause layout shifts */}
       <div
         className={cn(
-          "w-80 bg-neutral-900 border-r border-neutral-700 h-full overflow-hidden transition-all duration-300 ease-in-out fixed md:relative z-10",
-          isSidebarOpen ? "left-0" : "-left-80 md:left-0",
+          "w-80 bg-neutral-900 border-r border-neutral-700 h-full overflow-hidden transition-all duration-300 ease-in-out fixed z-20",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
           "flex flex-col shadow-2xl"
         )}
       >
